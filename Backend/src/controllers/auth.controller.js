@@ -7,7 +7,7 @@ const blacklistTokenModel = require('../models/blacklist.model');
 
 const cookieOptions = {
   httpOnly: true,                                   // not readable from JS (XSS-safe)
-  sameSite: 'lax',                                  // CSRF mitigation
+  sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax',                                  // CSRF mitigation
   secure: process.env.NODE_ENV === 'production',    // HTTPS only in production
   maxAge: 24 * 60 * 60 * 1000
 };
