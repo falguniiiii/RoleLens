@@ -494,3 +494,15 @@ $severity-low: #2f7d62;
     .interview-nav__item { width: auto; }
     .interview-content { max-height: none; padding: 1.25rem; }
 }
+
+.download-resume-button {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.55rem;
+    white-space: nowrap;
+}
+
+.download-resume-button svg {
+    flex-shrink: 0;
+}
