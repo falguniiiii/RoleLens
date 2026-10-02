@@ -49,6 +49,44 @@
   }
 }
 
+.password-input-wrapper {
+  position: relative;
+
+  input {
+    width: 100%;
+    padding-right: 3rem;
+    box-sizing: border-box;
+  }
+}
+
+.password-toggle {
+  position: absolute;
+  top: 50%;
+  right: 0.7rem;
+  transform: translateY(-50%);
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  padding: 0.25rem;
+  border: none;
+  background: transparent;
+  color: #68736f;
+  cursor: pointer;
+
+  &:hover {
+    color: #205c4a;
+  }
+
+  &:focus-visible {
+    outline: 2px solid rgba(32, 92, 74, 0.35);
+    outline-offset: 2px;
+    border-radius: 0.25rem;
+  }
+}
+
+
 .form-error {
   background: #fff3f1;
   border: 1px solid #e5b7b3;
