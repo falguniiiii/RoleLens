@@ -353,6 +353,48 @@ $severity-low: #2f7d62;
     }
 }
 
+// ── Road Map Extension ────────────────────────────────────────────────────────
+.roadmap-extension {
+    margin-top: 2rem;
+    padding: 1.25rem;
+    background-color: $bg-panel;
+    border: 1px solid $border-color;
+    border-radius: 0.75rem;
+
+    &__header {
+        display: flex;
+        flex-direction: column;
+        gap: 0.35rem;
+
+        h3 {
+            margin: 0;
+            font-size: 0.95rem;
+            font-weight: 700;
+            color: $text-primary;
+        }
+
+        p {
+            margin: 0;
+            font-size: 0.8rem;
+            color: $text-muted;
+            line-height: 1.5;
+        }
+    }
+
+    &__actions {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.6rem;
+        margin-top: 1rem;
+    }
+
+    &__error {
+        margin: 0.75rem 0 0;
+        font-size: 0.8rem;
+        color: $severity-high;
+    }
+}
+
 // ── Right Sidebar ─────────────────────────────────────────────────────────────
 .interview-sidebar {
     width: 240px;

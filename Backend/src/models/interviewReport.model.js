@@ -76,6 +76,18 @@ const PreparationPlanSchema = new mongoose.Schema({
     _id: false
 })
 
+const RoadmapExtensionSchema = new mongoose.Schema({
+    totalDays: {
+        type: Number,
+        enum: [14, 30, 60],
+        required: [true, 'Total roadmap days is required']
+    },
+
+    plan: [PreparationPlanSchema]
+}, {
+    _id: false
+})
+
 
 const interviewReportSchema = new mongoose.Schema({
     jobDescription: {
@@ -104,6 +116,8 @@ const interviewReportSchema = new mongoose.Schema({
     skillGaps: [SkillGapSchema],
 
     preparationPlan: [PreparationPlanSchema],
+
+    roadmapExtension: RoadmapExtensionSchema,
 
     user: {
         type: mongoose.Schema.Types.ObjectId,

@@ -21,11 +21,23 @@ const limiter = (limit, windowMs, message) => rateLimit({
 app.use(['/api/auth/login', '/api/auth/register'], limiter(20, 15 * 60 * 1000, 'Too many attempts. Please try again later.'));
 const aiLimiter = limiter(30, 60 * 60 * 1000, 'Hourly generation limit reached. Please try again later.');
 const pdfLimiter = limiter(20, 60 * 60 * 1000, 'Too many PDF requests. Please try again later.');
+const roadmapLimiter = limiter(10, 60 * 60 * 1000, 'Too many roadmap generation requests. Please try again later.');
 
 app.use('/api/interview', (req, res, next) => {
   if (req.method !== 'POST') return next();
-  if (req.path === '/' || req.path === '') return aiLimiter(req, res, next);
-  if (req.path.startsWith('/resume/pdf/')) return pdfLimiter(req, res, next);
+
+  if (req.path === '/' || req.path === '') {
+    return aiLimiter(req, res, next);
+  }
+
+  if (req.path.startsWith('/resume/pdf/')) {
+    return pdfLimiter(req, res, next);
+  }
+
+  if (/^\/report\/[^/]+\/roadmap$/.test(req.path)) {
+    return roadmapLimiter(req, res, next);
+  }
+
   return next();
 });
 

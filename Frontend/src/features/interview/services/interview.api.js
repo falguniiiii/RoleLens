@@ -64,3 +64,21 @@ export const deleteInterviewReport = async (interviewId) => {
         throw new Error(getErrorMessage(error, "Could not delete that interview plan."))
     }
 }
+
+export const extendInterviewRoadmap = async ({ interviewId, totalDays }) => {
+    try {
+        const response = await api.post(
+            `/api/interview/report/${interviewId}/roadmap`,
+            { totalDays }
+        )
+
+        return response.data
+    } catch (error) {
+        throw new Error(
+            getErrorMessage(
+                error,
+                "Could not extend your preparation roadmap. Please try again."
+            )
+        )
+    }
+}

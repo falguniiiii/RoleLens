@@ -3,9 +3,10 @@ import {
     generateInterviewReport,
     getInterviewReportById,
     generateResumePdf,
-    deleteInterviewReport
+    deleteInterviewReport,
+    extendInterviewRoadmap
 } from "../services/interview.api"
-import { useContext, useEffect } from "react"
+import { useContext, useEffect, useState } from "react"
 import { InterviewContext } from "../interview.context"
 import { useParams } from "react-router"
 
@@ -18,6 +19,9 @@ export const useInterview = () => {
     }
 
     const { loading, setLoading, report, setReport, reports, setReports, error, setError } = context
+
+    const [roadmapLoading, setRoadmapLoading] = useState(false)
+    const [roadmapError, setRoadmapError] = useState('')
 
     const generateReport = async ({ jobDescription, selfDescription, resumeFile }) => {
         setLoading(true)
@@ -75,6 +79,27 @@ export const useInterview = () => {
         }
     }
 
+    const extendRoadmap = async (totalDays) => {
+    setRoadmapLoading(true)
+    setRoadmapError('')
+
+    try {
+        const response = await extendInterviewRoadmap({
+            interviewId,
+            totalDays
+        })
+
+        setReport(response.interviewReport)
+
+        return response.interviewReport
+    } catch (err) {
+        setRoadmapError(err.message)
+        throw err
+    } finally {
+        setRoadmapLoading(false)
+    }
+}
+
     const getResumePdf = async (interviewReportId) => {
         setLoading(true)
 
@@ -101,15 +126,18 @@ export const useInterview = () => {
         }
     }, [interviewId])
 
-    return {
-        loading,
-        report,
-        reports,
-        error,
-        generateReport,
-        getReportById,
-        getReports,
-        getResumePdf,
-        removeReport
-    }
+    return { 
+    loading, 
+    report, 
+    reports, 
+    error, 
+    roadmapLoading,
+    roadmapError,
+    generateReport, 
+    getReportById, 
+    getReports, 
+    getResumePdf, 
+    removeReport,
+    extendRoadmap
+}
 }

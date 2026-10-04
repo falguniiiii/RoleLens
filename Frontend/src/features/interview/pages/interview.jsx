@@ -60,7 +60,15 @@ const RoadMapDay = ({ day }) => (
 // ── Main Component ────────────────────────────────────────────────────────────
 const Interview = () => {
     const [ activeNav, setActiveNav ] = useState('technical')
-    const { report, loading, error, getResumePdf } = useInterview()
+    const {
+    report,
+    loading,
+    error,
+    getResumePdf,
+    roadmapLoading,
+    roadmapError,
+    extendRoadmap
+} = useInterview()
     const { interviewId } = useParams()
 
 
@@ -92,6 +100,15 @@ const Interview = () => {
     const scoreLabel =
         report.matchScore >= 80 ? 'Strong match for this role' :
             report.matchScore >= 60 ? 'Good match \u2014 a few gaps to close' : 'Stretch role \u2014 focus on the skill gaps'
+
+    const roadmapDays = [  
+        ...(report.preparationPlan || []),
+        ...(report.roadmapExtension?.plan || [])
+    ].sort((a, b) => a.day - b.day)
+
+    const currentRoadmapDays = roadmapDays.length
+        ? Math.max(...roadmapDays.map((day) => day.day))
+        : 0
 
     return (
         <>
@@ -155,19 +172,58 @@ const Interview = () => {
                         </section>
                     )}
 
-                    {activeNav === 'roadmap' && (
-                        <section>
-                            <div className='content-header'>
-                                <h2>Preparation Road Map</h2>
-                                <span className='content-header__count'>{report.preparationPlan.length}-day plan</span>
+                   {activeNav === 'roadmap' && (
+                    <section>
+                        <div className='content-header'>
+                            <h2>Preparation Road Map</h2>
+                            <span className='content-header__count'>
+                                {currentRoadmapDays}-day plan
+                            </span>
+                        </div>
+
+                        <div className='roadmap-list'>
+                            {roadmapDays.map((day) => (
+                <RoadMapDay key={day.day} day={day} />
+                            ))}
+                        </div>
+
+                        {currentRoadmapDays < 60 && (
+                            <div className='roadmap-extension'>
+                                <div className='roadmap-extension__header'>
+                                    <h3>Need more preparation time?</h3>
+                                    <p>
+                                        Extend your roadmap with an AI-generated plan tailored
+                                        to this role.
+                                    </p>
+                                </div>
+
+                                <div className='roadmap-extension__actions'>
+                                    {[14, 30, 60]
+                                        .filter((days) => days > currentRoadmapDays)
+                                        .map((days) => (
+                                            <button
+                                                key={days}
+                                                type='button'
+                                                className='button primary-button'
+                                                onClick={() => extendRoadmap(days)}
+                                                disabled={roadmapLoading}
+                                            >
+                                                {roadmapLoading
+                                                    ? 'Generating...'
+                                                    : `Extend to ${days} days`}
+                                            </button>
+                                        ))}
+                                </div>
+
+                                {roadmapError && (
+                                    <p className='roadmap-extension__error' role='alert'>
+                                        {roadmapError}
+                                    </p>
+                                                )}
                             </div>
-                            <div className='roadmap-list'>
-                                {report.preparationPlan.map((day) => (
-                                    <RoadMapDay key={day.day} day={day} />
-                                ))}
-                            </div>
-                        </section>
-                    )}
+                        )}
+                    </section>
+                )}
                 </main>
 
                 <div className='interview-divider' />

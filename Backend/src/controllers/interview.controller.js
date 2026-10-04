@@ -1,11 +1,24 @@
 const mongoose = require('mongoose');
 const { PDFParse } = require('pdf-parse');
-const { generateInterviewReport, generateResumePdf } = require('../services/ai.service');
+const { z } = require('zod');
+const {
+    generateInterviewReport,
+    generateRoadmapExtension,
+    generateResumePdf
+} = require('../services/ai.service');
 const interviewReportModel = require('../models/interviewReport.model');
 
 const MAX_JOB_DESCRIPTION = 12000;
 const MAX_SELF_DESCRIPTION = 5000;
 const MAX_RESUME_TEXT = 30000;
+
+const roadmapExtensionRequestSchema = z.object({
+    totalDays: z.union([
+        z.literal(14),
+        z.literal(30),
+        z.literal(60)
+    ])
+});
 
 const asText = (value) => (typeof value === 'string' ? value.trim() : '');
 const clampScore = (value) => Math.min(100, Math.max(0, Math.round(Number(value) || 0)));
@@ -111,6 +124,102 @@ async function getInterviewReportByIdController(req, res) {
     });
 }
 
+/** @route POST /api/interview/report/:interviewId/roadmap  @access Private (owner only) */
+async function extendInterviewRoadmapController(req, res) {
+    const { interviewId } = req.params;
+
+    if (!validId(interviewId)) {
+        return res.status(404).json({ message: 'Interview report not found.' });
+    }
+
+    const parsed = roadmapExtensionRequestSchema.safeParse(req.body);
+
+    if (!parsed.success) {
+        return res.status(400).json({
+            message: 'totalDays must be one of 14, 30, or 60'
+        });
+    }
+
+    const { totalDays } = parsed.data;
+
+    const interviewReport = await interviewReportModel.findOne({
+        _id: interviewId,
+        user: req.user.id
+    });
+
+    if (!interviewReport) {
+        return res.status(404).json({ message: 'Interview report not found.' });
+    }
+
+    const existingPlan = interviewReport.preparationPlan || [];
+    const existingExtension = interviewReport.roadmapExtension;
+
+    const currentTotalDays = existingExtension?.totalDays ||
+        Math.max(...existingPlan.map((day) => day.day), 0);
+
+    if (totalDays <= currentTotalDays) {
+        return res.status(400).json({
+            message: `Your roadmap already covers ${currentTotalDays} days. Choose a longer duration.`
+        });
+    }
+
+    const startDay = currentTotalDays + 1;
+    const endDay = totalDays;
+
+    const existingExtensionPlan = existingExtension?.plan || [];
+
+    const ai = await generateRoadmapExtension({
+        resume: interviewReport.resume || '',
+        selfDescription: interviewReport.selfDescription || '',
+        jobDescription: interviewReport.jobDescription,
+        title: interviewReport.title,
+        skillGaps: interviewReport.skillGaps || [],
+        existingPlan: [
+            ...existingPlan,
+            ...existingExtensionPlan
+        ],
+        startDay,
+        endDay
+    });
+
+    const expectedDays = [];
+
+    for (let day = startDay; day <= endDay; day++) {
+        expectedDays.push(day);
+    }
+
+    const generatedPlan = ai.plan;
+
+    const generatedDays = generatedPlan.map((day) => day.day);
+
+    const hasExactDays =
+        generatedDays.length === expectedDays.length &&
+        generatedDays.every((day, index) => day === expectedDays[index]);
+
+    if (!hasExactDays) {
+        return res.status(502).json({
+            message: 'The generated roadmap did not contain the expected days. Please try again.'
+        });
+    }
+
+    const updatedExtensionPlan = [
+        ...existingExtensionPlan,
+        ...generatedPlan
+    ];
+
+    interviewReport.roadmapExtension = {
+        totalDays,
+        plan: updatedExtensionPlan
+    };
+
+    await interviewReport.save();
+
+    return res.status(200).json({
+        message: `Roadmap extended to ${totalDays} days successfully.`,
+        interviewReport
+    });
+}
+
 /** @route GET /api/interview  @access Private */
 async function getAllInterviewReportsController(req, res) {
     const interviewReports = await interviewReportModel
@@ -179,6 +288,7 @@ async function generateResumePdfController(req, res) {
 module.exports = {
     generateInterviewReportController,
     getInterviewReportByIdController,
+    extendInterviewRoadmapController,
     getAllInterviewReportsController,
     deleteInterviewReportController,
     generateResumePdfController
