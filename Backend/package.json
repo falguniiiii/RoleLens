@@ -5,7 +5,8 @@
   "scripts": {
     "test": "node scripts/syntax-check.js",
     "dev": "npx nodemon server.js",
-    "check": "node scripts/syntax-check.js"
+    "check": "node scripts/syntax-check.js",
+    "postinstall": "puppeteer browsers install chrome"
   },
   "keywords": [],
   "author": "",
