@@ -23,6 +23,9 @@ export const useInterview = () => {
     const [roadmapLoading, setRoadmapLoading] = useState(false)
     const [roadmapError, setRoadmapError] = useState('')
 
+    const [pdfLoading, setPdfLoading] = useState(false)
+    const [pdfError, setPdfError] = useState('')
+
     const generateReport = async ({ jobDescription, selfDescription, resumeFile }) => {
         setLoading(true)
         setReport(null)
@@ -100,21 +103,38 @@ export const useInterview = () => {
     }
 }
 
+    
     const getResumePdf = async (interviewReportId) => {
-        setLoading(true)
+        setPdfLoading(true)
+        setPdfError('')
 
         try {
             const response = await generateResumePdf({ interviewReportId })
-            const url = window.URL.createObjectURL(new Blob([response], { type: "application/pdf" }))
+
+            const url = window.URL.createObjectURL(
+                new Blob([response], { type: "application/pdf" })
+            )
+
             const link = document.createElement("a")
             link.href = url
-            link.setAttribute("download", `resume_${interviewReportId}.pdf`)
+            link.setAttribute(
+                "download",
+                `resume_${interviewReportId}.pdf`
+            )
+
             document.body.appendChild(link)
             link.click()
             link.remove()
-            window.URL.revokeObjectURL(url)
+
+            window.setTimeout(() => {
+                window.URL.revokeObjectURL(url)
+            }, 1000)
+        } catch (err) {
+            setPdfError(
+                err.message || "Could not generate the resume PDF. Please try again."
+            )
         } finally {
-            setLoading(false)
+            setPdfLoading(false)
         }
     }
 
@@ -133,6 +153,8 @@ export const useInterview = () => {
     error, 
     roadmapLoading,
     roadmapError,
+    pdfLoading,
+    pdfError,
     generateReport, 
     getReportById, 
     getReports, 
